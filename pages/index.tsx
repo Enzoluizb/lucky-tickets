@@ -1,6 +1,14 @@
 import Head from 'next/head'
+import { useContract } from '@thirdweb-dev/react'
+import Loading from '@/components/Loading'
 
 export default function Home() {
+  const { contract, isLoading } = useContract("0x8841867693CdB7a8c0f6999b6300367E0c6f7448")
+  
+  if (isLoading) {
+    return <Loading/>
+  }
+  
   return (
     <>
       <Head>
