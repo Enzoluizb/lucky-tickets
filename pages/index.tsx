@@ -1,6 +1,7 @@
 import Head from 'next/head'
 import { useContract } from '@thirdweb-dev/react'
 import Loading from '@/components/Loading'
+import Header from '@/components/Header'
 
 export default function Home() {
   const { contract, isLoading } = useContract("0x8841867693CdB7a8c0f6999b6300367E0c6f7448")
@@ -17,7 +18,7 @@ export default function Home() {
         <meta name="viewport" content="width=device-width, initial-scale=1" />
         <link rel="icon" href="/favicon.ico" />
       </Head>
-      <h1>Hello World</h1>
+      <Header/>
     </>
   )
 }
