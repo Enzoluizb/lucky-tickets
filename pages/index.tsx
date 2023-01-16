@@ -1,15 +1,50 @@
 import Head from 'next/head'
-import { useContract } from '@thirdweb-dev/react'
-import Loading from '@/components/Loading'
-import Header from '@/components/Header'
+import { useEffect, useState } from 'react'
+import { useAddress, useContract, useContractRead, useContractWrite } from '@thirdweb-dev/react'
+import Loading from '../components/Loading'
+import Header from '../components/Header'
+import MainContent from '../components/MainContent'
 
 export default function Home() {
-  const { contract, isLoading } = useContract("0x8841867693CdB7a8c0f6999b6300367E0c6f7448")
-  
+  const [userTickets, setUserTickets] = useState(0)
+  const [totalWallets, setTotalWallets] = useState<string[]>([])
+
+  const address = useAddress()
+  const { contract, isLoading } = useContract("0xA6c548B9Db4D2bfa29E0d222f215AE78E3f2b464")
+  const { data: lotteryOperator } = useContractRead(contract, "lotteryOperator")
+  const { data: tickets } = useContractRead(contract, "getTickets")
+  const { data: winnings } = useContractRead(contract, "getWinningsForAddress", address)
+  const { data: currentWinningReward } = useContractRead(contract, "currentWinningReward")
+  const { data: ticketPrice } = useContractRead(contract, "ticketPrice")
+  const { data: expiration } = useContractRead(contract, "expiration")
+  const { data: lastWinner } = useContractRead(contract, "lastWinner")
+  const { data: lastWinnerAmount } = useContractRead(contract, "lastWinnerAmount")
+  const { data: totalCommission } = useContractRead(contract, "operatorTotalCommission")
+  const { mutateAsync: drawWinnerTicket } = useContractWrite(contract, "drawWinnerTicket")
+  const { mutateAsync: withdrawCommission } = useContractWrite(contract, "withdrawCommission")
+  const { mutateAsync: restartDraw } = useContractWrite(contract, "restartDraw")
+  const { mutateAsync: withdrawWinnings} = useContractWrite(contract, "withdrawWinnings")
+  const { mutateAsync: buyTickets} = useContractWrite(contract, "buyTickets")
+
+  useEffect(() => {
+    if(tickets) {
+      const wallets: string[] = []
+      const userTotalTickets = tickets.reduce((total: number, ticketAdress: string) => (ticketAdress === address ? total + 1 : total), 0)
+      tickets.forEach((wallet: string) => {
+        if(!wallets.includes(wallet)) {
+          wallets.push(wallet)
+        }
+      })
+
+      setUserTickets(userTotalTickets)
+      setTotalWallets(wallets)
+    }
+  }, [tickets, address])
+
   if (isLoading) {
-    return <Loading/>
+    return <Loading />
   }
-  
+
   return (
     <>
       <Head>
@@ -18,7 +53,29 @@ export default function Home() {
         <meta name="viewport" content="width=device-width, initial-scale=1" />
         <link rel="icon" href="/favicon.ico" />
       </Head>
-      <Header/>
+      <Header
+        address={address}
+        lotteryOperator={lotteryOperator}
+        userTickets={userTickets}
+        winnings={winnings}
+        drawWinnerTicket={drawWinnerTicket}
+        withdrawCommission={withdrawCommission}
+        restartDraw={restartDraw}
+        totalCommission={totalCommission}
+        withdrawWinnings={withdrawWinnings}
+        />
+      <MainContent
+        lotteryOperator={lotteryOperator}
+        address={address}
+        currentWinningReward={currentWinningReward}
+        ticketPrice={ticketPrice}
+        expiration={expiration}
+        tickets={tickets}
+        lastWinner={lastWinner}
+        lastWinnerAmount={lastWinnerAmount}
+        totalWallets={totalWallets}
+        buyTickets={buyTickets}
+      />
     </>
   )
 }
